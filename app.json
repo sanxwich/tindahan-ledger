@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Bartolabac-Week2",
-    "slug": "bartolabac-week2",
+    "name": "Tindahan Ledger",
+    "slug": "tindahan-ledger",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "bartolabac",
+    "scheme": "tindahan-ledger",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
