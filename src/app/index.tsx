@@ -1,98 +1,151 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Link } from "expo-router";
+import {
+  ActivityIndicator,
+  Button,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { ShareBar } from "@/components/share-bar";
+import { Stat } from "@/components/stat";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { BottomTabInset, MaxContentWidth, Spacing } from "@/constants/theme";
+import { summarise } from "@/data/summary";
+import { useCustomers } from "@/hooks/use-customers";
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
+export default function DashboardScreen() {
+  const { status, customers, problem, retry } = useCustomers();
+
+  if (status === "loading") {
     return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
+      <ThemedView style={styles.middle}>
+        <ActivityIndicator />
+        <ThemedText themeColor="textSecondary">Loading the ledger</ThemedText>
+      </ThemedView>
     );
   }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
 
-export default function HomeScreen() {
+  if (status === "error") {
+    return (
+      <ThemedView style={styles.middle}>
+        <ThemedText>{problem}</ThemedText>
+        <Button title="Try again" onPress={retry} />
+      </ThemedView>
+    );
+  }
+
+  if (status === "empty") {
+    return (
+      <ThemedView style={styles.middle}>
+        <ThemedText>No customers yet.</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          Add the first one to see the totals.
+        </ThemedText>
+      </ThemedView>
+    );
+  }
+
+  const summary = summarise(customers);
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+        <ScrollView contentContainerStyle={styles.scroll}>
+          <ThemedView style={styles.hero}>
+            <ThemedText
+              type="code"
+              themeColor="textSecondary"
+              style={styles.eyebrow}
+            >
+              Sari-sari store
+            </ThemedText>
+            <ThemedText type="title">Tindahan ni Dave</ThemedText>
+          </ThemedView>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+          <ThemedView type="backgroundElement" style={styles.card}>
+            <View style={styles.statRow}>
+              <Stat
+                label="Total owed"
+                value={`₱ ${summary.total.toFixed(2)}`}
+              />
+              <Stat
+                label="Average owed"
+                value={`₱ ${summary.average.toFixed(2)}`}
+              />
+            </View>
+            <View style={styles.statRow}>
+              <Stat
+                label="Still owing"
+                value={`${summary.owing} of ${summary.count}`}
+              />
+              <Stat label="Settled" value={String(summary.settled)} />
+            </View>
+          </ThemedView>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+          <ThemedView type="backgroundElement" style={styles.card}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Share of what is owed
+            </ThemedText>
+            {summary.ranked.map((c) => (
+              <ShareBar
+                key={c.id}
+                name={c.name}
+                balance={c.balance}
+                share={c.share}
+              />
+            ))}
+            {summary.ranked.length === 0 && (
+              <ThemedText themeColor="textSecondary">
+                Everyone has paid up.
+              </ThemedText>
+            )}
+          </ThemedView>
 
-        {Platform.OS === 'web' && <WebBadge />}
+          <Link href="/customers" asChild>
+            <Pressable style={styles.button}>
+              <ThemedText style={styles.buttonText}>View customers</ThemedText>
+            </Pressable>
+          </Link>
+        </ScrollView>
       </SafeAreaView>
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  container: { flex: 1, justifyContent: "center", flexDirection: "row" },
+  middle: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.two,
   },
-  safeArea: {
-    flex: 1,
+  safeArea: { flex: 1, maxWidth: MaxContentWidth, width: "100%" },
+  scroll: {
     paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
+    paddingTop:
+      Platform.OS === "web" ? Spacing.six + Spacing.three : Spacing.four,
+    paddingBottom: BottomTabInset + Spacing.four,
     gap: Spacing.four,
   },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
+  hero: { gap: Spacing.two },
+  eyebrow: { textTransform: "uppercase" },
+  card: {
     borderRadius: Spacing.four,
+    padding: Spacing.four,
+    gap: Spacing.four,
   },
+  statRow: { flexDirection: "row", gap: Spacing.four },
+  button: {
+    backgroundColor: "#3c87f7",
+    borderRadius: Spacing.three,
+    paddingVertical: Spacing.three,
+    alignItems: "center",
+  },
+  buttonText: { color: "#ffffff", fontWeight: 600 },
 });

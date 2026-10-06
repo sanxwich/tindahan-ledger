@@ -1,19 +1,35 @@
-import { Text, View } from "react-native";
+import { Pressable } from "react-native";
 
-type CustomerRowProps = { name: string; balance: number; lastPaid: string };
+import { ThemedText } from "@/components/themed-text";
+import { Spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
-export function CustomerRow({ name, balance }: CustomerRowProps) {
+type CustomerRowProps = {
+  name: string;
+  balance: number;
+  lastPaid: string;
+  onPress: () => void;
+};
+
+export function CustomerRow({
+  name,
+  balance,
+  lastPaid,
+  onPress,
+}: CustomerRowProps) {
+  const theme = useTheme();
   return (
-    <View
+    <Pressable
+      onPress={onPress}
       style={{
-        paddingVertical: 14,
+        paddingVertical: Spacing.three,
         borderBottomWidth: 1,
-        borderBottomColor: "#ccc",
+        borderColor: theme.backgroundSelected,
       }}
     >
-      <Text style={{ fontSize: 18 }}>{name}</Text>
-      <Text>₱ {balance.toFixed(2)}</Text>
-      <Text>Last Paid: {balance.toFixed(2)}</Text>
-    </View>
+      <ThemedText>{name}</ThemedText>
+      <ThemedText themeColor="textSecondary">₱ {balance.toFixed(2)}</ThemedText>
+      <ThemedText themeColor="textSecondary">Last Paid: {lastPaid}</ThemedText>
+    </Pressable>
   );
 }
