@@ -32,6 +32,13 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      "expo-sqlite",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Tindahan Ledger uses the camera to take a photo of the store."
+        }
       ]
     ],
     "experiments": {

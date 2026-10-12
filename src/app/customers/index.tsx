@@ -1,3 +1,4 @@
+import { useProfile } from "@/hooks/use-profile";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -23,6 +24,7 @@ export default function CustomerScreen() {
   const [attempt, setAttempt] = useState(0);
   const [query, setQuery] = useState("");
 
+  const profile = useProfile();
   const [adding, setAdding] = useState(false);
 
   const retry = () => setAttempt((prev) => prev + 1);
@@ -89,8 +91,9 @@ export default function CustomerScreen() {
         />
         <ThemedText>Total owed: ₱ {total.toFixed(2)}</ThemedText>
 
-        <Button title="Add customer" onPress={() => setAdding(true)} />
-
+        {profile?.role === "admin" && (
+          <Button title="Add customer" onPress={() => setAdding(true)} />
+        )}
         <AddCustomerModal
           visible={adding}
           onClose={() => setAdding(false)}
